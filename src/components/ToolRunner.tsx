@@ -20,7 +20,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
   try{
    if(tool.kind==="ocr"){setResult(await ocr(file as File))}
    else if(needFile){const x=await runImage(tool.slug,file as File,b,b,c,tool.slug==="signature-image"?c:page);saveBlob(x.blob,x.name);setResult(x.message)}
-   else if(needPdf){const inputFiles=tool.slug==="word-to-pdf"?[files[0]||file as File]:files;const x=await runPdf(tool.slug,inputFiles,page);saveBlob(x.blob,x.name);setResult(x.message)}
+   else if(needPdf){const inputFiles=tool.slug==="word-to-pdf"?[files[0]||file as File]:files;const x=await runPdf(tool.slug,inputFiles,page,{operation:tool.slug==="edit-pdf"?mode:"text",text:a,x:b,y:c,size:len});saveBlob(x.blob,x.name);setResult(x.message)}
    else if(tool.kind==="calc")setResult(calculate(tool.slug,a,b,c,people))
    else if(tool.kind==="convert")setResult(convert(tool.slug,a,mode))
    else if(tool.kind==="timezone")setResult(new Intl.DateTimeFormat("en-GB",{timeZone:to,dateStyle:"full",timeStyle:"long"}).format(zoned(dt,from)))
@@ -39,7 +39,8 @@ export default function ToolRunner({tool}:{tool:Tool}){
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
   {tool.slug==="signature-image"&&<div className="form">{field("Cleanup threshold",c,setC,"number","235")}</div>}
-  {tool.slug==="extract-pdf-page"&&<div className="form">{field("Page number",page,setPage,"number","1")}</div>}
+  {(tool.slug==="extract-pdf-page"||tool.slug==="edit-pdf")&&<div className="form">{field("Page number",page,setPage,"number","1")}</div>}
+  {tool.slug==="edit-pdf"&&<div className="form"><div className="field"><label>Edit action</label><select value={mode} onChange={e=>setMode(e.target.value)}><option value="text">Add text</option><option value="rotate">Rotate page 90°</option><option value="delete">Delete page</option></select></div>{mode==="text"&&<>{field("Text",a,setA,"text","Text to add to the PDF")}{field("X position (from left)",b,setB,"number","50")}{field("Y position (from bottom)",c,setC,"number","50")}{field("Font size",len,setLen,"number","14")}</>}</div>}
   {tool.kind==="calc"&&<div className="form">
    {tool.slug==="days-between-dates"&&<>{field("Start date",a,setA,"date")}{field("End date",b,setB,"date")}</>}
    {tool.slug==="day-of-date"&&field("Date",a,setA,"date")}
