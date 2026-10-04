@@ -52,14 +52,14 @@ export async function scoreResume(file:File,jobDescription:string){
  if(clean.length<500)parsing-=8;
  else if(clean.length<1000)parsing-=3;
  if((text.match(/[�]/g)||[]).length>2)parsing-=4;
- scoreParts.push(["ATS readability",Math.max(0,parsing),20,parsing===20?"Good selectable text and reasonable resume length.":"Text extraction is weak or unusually short."]);
+ scoreParts.push({name:"ATS readability",score:Math.max(0,parsing),max:20,note:parsing===20?"Good selectable text and reasonable resume length.":"Text extraction is weak or unusually short."});
 
  let contact=0;
  if(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i.test(text))contact+=3;
  if(/(?:\\+?\\d[\\d ()-]{7,}\\d)/.test(text))contact+=3;
  if(/linkedin\\.com\\/in\\/|\\blinkedin\\b/i.test(text))contact+=2;
  if(/github\\.com\\/|\\bgithub\\b/i.test(text))contact+=2;
- scoreParts.push(["Contact & links",contact,10,contact>=8?"Contact details are easy to detect.":"Add clearly written email, phone, LinkedIn and GitHub/portfolio links."]);
+ scoreParts.push({name:"Contact & links",score:contact,max:10,note:contact>=8?"Contact details are easy to detect.":"Add clearly written email, phone, LinkedIn and GitHub/portfolio links."});
 
  let sections=0;
  const found:string[]=[];
@@ -67,13 +67,13 @@ export async function scoreResume(file:File,jobDescription:string){
   if(sectionPresent(text,pattern)){sections+=name==="links"?2:3;found.push(name)}
  }
  sections=Math.min(20,sections);
- scoreParts.push(["Sections",sections,20,found.length>=5?"Core ATS sections are present.":"Add standard headings such as Experience, Education, Skills and Projects."]);
+ scoreParts.push({name:"Sections",score:sections,max:20,note:found.length>=5?"Core ATS sections are present.":"Add standard headings such as Experience, Education, Skills and Projects."});
 
  let impact=0;
  const quantified=(text.match(/\\b\\d+(?:\\.\\d+)?(?:%|\\+|x|k|m|b)?\\b|[$₹€£]\\s?\\d+/gi)||[]).length;
  const actionHits=(text.match(/\\b(built|developed|implemented|automated|optimized|reduced|increased|improved|led|designed|deployed|secured|analyzed|created|managed|delivered|migrated|tested)\\b/gi)||[]).length;
  impact=Math.min(15,Math.min(9,Math.floor(quantified/2)*3)+Math.min(6,Math.floor(actionHits/5)*2));
- scoreParts.push(["Impact & achievements",impact,15,impact>=10?"Good use of measurable outcomes and action verbs.":"Add measurable results: %, time saved, scale, users, revenue, accuracy, cost, incidents, etc."]);
+ scoreParts.push({name:"Impact & achievements",score:impact,max:15,note:impact>=10?"Good use of measurable outcomes and action verbs.":"Add measurable results: %, time saved, scale, users, revenue, accuracy, cost, incidents, etc."});
 
  let formatting=15;
  const weird=(text.match(/[•▪◦●◆◇]/g)||[]).length;
@@ -81,7 +81,7 @@ export async function scoreResume(file:File,jobDescription:string){
  if(veryLong>4)formatting-=4;
  if(weird>80)formatting-=2;
  if(/\t{2,}/.test(text))formatting-=2;
- scoreParts.push(["ATS-friendly formatting",Math.max(0,formatting),15,formatting>=13?"Plain, parseable formatting signals detected.":"Simplify complex spacing, layouts and decorative formatting."]);
+ scoreParts.push({name:"ATS-friendly formatting",score:Math.max(0,formatting),max:15,note:formatting>=13?"Plain, parseable formatting signals detected.":"Simplify complex spacing, layouts and decorative formatting."});
 
  let keywordScore=20;
  let keywordNote="No job description supplied; score reflects general ATS readiness.";
@@ -93,9 +93,9 @@ export async function scoreResume(file:File,jobDescription:string){
   keywordScore=Math.round(Math.min(20,ratio*20));
   keywordNote=`Matched ${matches.length} of ${jdWords.length} important job-description terms (${Math.round(ratio*100)}%).`;
  }else keywordScore=12;
- scoreParts.push(["Job keyword match",keywordScore,20,keywordNote]);
+ scoreParts.push({name:"Job keyword match",score:keywordScore,max:20,note:keywordNote});
 
- const total=Math.round(scoreParts.reduce((s,p)=>s+p[1],0));
+ const total=Math.round(scoreParts.reduce((s,p)=>s+p.score,0));
  const missingSections=["experience","education","skills","projects"].filter(x=>!found.includes(x));
  const recommendations:string[]=[];
  if(missingSections.length)recommendations.push("Add standard sections: "+missingSections.map(x=>x[0].toUpperCase()+x.slice(1)).join(", ")+".");
