@@ -60,9 +60,9 @@ export async function convertVideoToAudio(file:File,format:AudioFormat,onProgres
   const ret=await engine.exec(["-i",input,"-vn","-map","0:a:0?",...settings[format].codec,output]);
   if(ret!==0)throw Error("FFmpeg could not extract an audio stream from this video.");
   const data=await engine.readFile(output);
-  const bytes=data instanceof Uint8Array?data:new Uint8Array(data as ArrayBuffer);
+  if(typeof data==="string")throw Error("The converter returned an invalid audio result.");
   return {
-   blob:new Blob([bytes.buffer],{type:settings[format].mime}),
+   blob:new Blob([data],{type:settings[format].mime}),
    name:file.name.replace(/\.[^/.]+$/,"")+"."+format
   };
  }finally{
