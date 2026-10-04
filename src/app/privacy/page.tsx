@@ -3,7 +3,7 @@ const Header=()=> <header className="topbar"><div className="container nav"><Lin
 
 export default function Privacy(){return <div className="site"><Header/><main className="container legal"><h1>Privacy</h1><p>Last updated: October 5, 2026</p>
 <h2>Privacy by design</h2>
-<p>For most image and PDF tools, your selected file is processed locally in your browser on your own device. The file is read by the browser and local JavaScript libraries such as Canvas, PDF.js, pdf-lib, Mammoth and Tesseract.js to create the result. These tools do not upload your selected file to our server for processing, and we do not maintain a permanent file library.</p>
+<p>For most image and PDF tools, your selected file is processed locally in your browser on your own device. The video-to-audio converter also runs conversion locally in the browser using FFmpeg WebAssembly; its runtime is loaded only when needed. The file is read by the browser and local JavaScript libraries such as Canvas, PDF.js, pdf-lib, Mammoth and Tesseract.js to create the result. These tools do not upload your selected file to our server for processing, and we do not maintain a permanent file library.</p>
 <h2>What “local” means</h2>
 <p>Your original image, PDF or Word file stays in the browser session while the tool runs. The generated result is created on your device and downloaded directly from the browser. A normal internet connection is still required to load the website and its JavaScript libraries, and browser extensions, network tools or the browser itself may have their own data practices.</p>
 <h2>External processing</h2>
