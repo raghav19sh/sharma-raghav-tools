@@ -55,10 +55,10 @@ export async function scoreResume(file:File,jobDescription:string){
  scoreParts.push({name:"ATS readability",score:Math.max(0,parsing),max:20,note:parsing===20?"Good selectable text and reasonable resume length.":"Text extraction is weak or unusually short."});
 
  let contact=0;
- if(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i.test(text))contact+=3;
- if(/(?:\\+?\\d[\\d ()-]{7,}\\d)/.test(text))contact+=3;
- if(/linkedin\\.com\\/in\\/|\\blinkedin\\b/i.test(text))contact+=2;
- if(/github\\.com\\/|\\bgithub\\b/i.test(text))contact+=2;
+ if(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text))contact+=3;
+ if(/(?:\+?\d[\d ()-]{7,}\d)/.test(text))contact+=3;
+ if(/linkedin\.com\/in\/|\blinkedin\b/i.test(text))contact+=2;
+ if(/github\.com\/|\bgithub\b/i.test(text))contact+=2;
  scoreParts.push({name:"Contact & links",score:contact,max:10,note:contact>=8?"Contact details are easy to detect.":"Add clearly written email, phone, LinkedIn and GitHub/portfolio links."});
 
  let sections=0;
