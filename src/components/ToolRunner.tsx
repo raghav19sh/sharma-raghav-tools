@@ -16,6 +16,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
  const [file,setFile]=useState<File|null>(null),[files,setFiles]=useState<File[]>([]);
  const [a,setA]=useState(""),[b,setB]=useState(""),[c,setC]=useState(""),[page,setPage]=useState("1");
  const [mode,setMode]=useState("pretty"),[people,setPeople]=useState("5"),[from,setFrom]=useState("Asia/Kolkata"),[to,setTo]=useState("Europe/Paris");
+ const [scanMode,setScanMode]=useState("bw"),[editOperation,setEditOperation]=useState("text"),[editText,setEditText]=useState(""),[editX,setEditX]=useState("50"),[editY,setEditY]=useState("50"),[editSize,setEditSize]=useState("14");
  const [dt,setDt]=useState("2026-10-04T18:00"),[len,setLen]=useState("20"),[symbols,setSymbols]=useState(true);
  const [status,setStatus]=useState(""),[error,setError]=useState(""),[result,setResult]=useState(""),[short,setShort]=useState(""),[qr,setQr]=useState("");
  const field=(label:string,value:string,set:(v:string)=>void,type="text",placeholder="")=><div className="field"><label>{label}</label><input type={type} value={value} onChange={e=>set(e.target.value)} placeholder={placeholder}/></div>;
@@ -45,7 +46,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
    for(let i=0;i<selected.length;i++){
     const f=selected[i];
     setStatus(selected.length>1?"Processing "+(i+1)+"/"+selected.length+"…":"Working…");
-    const x=await runImage(tool.slug,f,b,b,c,tool.slug==="signature-image"?c:page);
+    const x=await runImage(tool.slug,f,b,b,c,tool.slug==="signature-image"?c:page,scanMode);
     saveBlob(x.blob,withSourceName(f.name,x.name));
     outputs.push(f.name+": "+x.message);
     if(i<selected.length-1)await pause(100);
@@ -57,7 +58,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
    if(!selected.length)throw Error("Choose at least one file first.");
    if(tool.slug==="merge-pdf"||tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"){
     setStatus("Processing "+selected.length+" files…");
-    const x=await runPdf(tool.slug,selected,page);
+    const x=await runPdf(tool.slug,selected,page,{operation:editOperation,text:editText,x:editX,y:editY,size:editSize},scanMode);
     saveBlob(x.blob,x.name);
     setResult(x.message);
    }else{
@@ -65,7 +66,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
     for(let i=0;i<selected.length;i++){
      const f=selected[i];
      setStatus(selected.length>1?"Processing "+(i+1)+"/"+selected.length+"…":"Working…");
-     const x=await runPdf(tool.slug,[f],page);
+     const x=await runPdf(tool.slug,[f],page,{operation:editOperation,text:editText,x:editX,y:editY,size:editSize},scanMode);
      saveBlob(x.blob,withSourceName(f.name,x.name));
      outputs.push(f.name+": "+x.message);
      if(i<selected.length-1)await pause(100);
@@ -99,7 +100,10 @@ export default function ToolRunner({tool}:{tool:Tool}){
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
   {tool.slug==="signature-image"&&<div className="form">{field("Cleanup threshold",c,setC,"number","235")}</div>}
+  {tool.slug==="scan-image"&&<div className="form"><div className="field"><label>Scan mode</label><select value={scanMode} onChange={e=>setScanMode(e.target.value)}><option value="bw">Black & white</option><option value="grayscale">Grayscale</option></select></div></div>}
   {tool.slug==="extract-pdf-page"&&<div className="form">{field("Page number",page,setPage,"number","1")}</div>}
+  {tool.slug==="scan-pdf"&&<div className="form"><div className="field"><label>Scan mode</label><select value={scanMode} onChange={e=>setScanMode(e.target.value)}><option value="bw">Black & white</option><option value="grayscale">Grayscale</option></select></div></div>}
+  {tool.slug==="edit-pdf"&&<div className="form"><div className="field"><label>Operation</label><select value={editOperation} onChange={e=>setEditOperation(e.target.value)}><option value="text">Add text</option><option value="rotate">Rotate page 90°</option><option value="delete">Delete page</option></select></div>{field("Page number",page,setPage,"number","1")}{editOperation==="text"&&<>{field("Text",editText,setEditText,"text","Text to add")}{field("X position",editX,setEditX,"number","50")}{field("Y position",editY,setEditY,"number","50")}{field("Font size",editSize,setEditSize,"number","14")}</>}</div>}
   {tool.kind==="calc"&&<div className="form">
    {tool.slug==="days-between-dates"&&<>{field("Start date",a,setA,"date")}{field("End date",b,setB,"date")}</>}
    {tool.slug==="day-of-date"&&field("Date",a,setA,"date")}
