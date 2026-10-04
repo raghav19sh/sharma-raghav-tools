@@ -5,8 +5,7 @@ const textBlob=(x:string)=>new Blob([x],{type:"text/plain;charset=utf-8"});
 
 async function loadPdf(data:ArrayBuffer){
  const pdfjs=await import("pdfjs-dist/legacy/build/pdf.mjs");
- pdfjs.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.worker.min.mjs";
- return await pdfjs.getDocument({data}).promise;
+ return await pdfjs.getDocument({data,disableWorker:true}).promise;
 }
 
 async function extractPdfText(data:ArrayBuffer){

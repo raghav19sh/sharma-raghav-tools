@@ -16,8 +16,6 @@ const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
 ["pdf-to-word","Convert PDF to Word","Extract selectable PDF text into DOCX.","pdf","pdf"],
 ["screenshot-to-pdf","Turn screenshot into PDF","Create a PDF from one or more PNG or JPG screenshots.","pdf","pdf"],
 ["images-to-pdf","Images to sequenced PDF","Combine many images into one PDF in the order you select them.","pdf","pdf"],
-["edit-pdf","Edit PDF","Add text, rotate pages, or delete a page from a PDF.","pdf","pdf"],
-["scan-pdf","Scan PDF","OCR a PDF page by page and download the extracted text.","pdf","pdf"],
 ["pdf-to-docs","Convert PDF to Google Docs","Convert selectable PDF text into a DOCX file you can open in Google Docs.","pdf","pdf"],
 ["word-to-pdf","Convert Word to PDF","Convert a DOCX Word document into a text-based PDF.","pdf","pdf"],
 ["days-between-dates","How many days between two dates?","Count calendar days between two dates.","calc","calc"],
@@ -47,8 +45,7 @@ const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
 ["url-shortener","Make a URL shorter","Create a short shareable URL using an external service.","text","url"],
 ["qr-generator","Generate QR code","Create a downloadable QR code locally.","utility","qr"],
 ["password-generator","Generate strong password","Generate random passwords with Web Crypto.","utility","password"],
-["extract-text-image","Extract text from image","Run OCR on an image in your browser.","utility","ocr"],
-["scan-image","Scan image","Scan an image and extract readable text with OCR in your browser.","utility","ocr"]
+["extract-text-image","Extract text from image","Run OCR on an image in your browser.","utility","ocr"]
 ];
 
 const stepsBy:Record<CategoryId,string[]>={
