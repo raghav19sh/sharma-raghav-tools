@@ -20,6 +20,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
  const [status,setStatus]=useState(""),[error,setError]=useState(""),[result,setResult]=useState(""),[short,setShort]=useState(""),[qr,setQr]=useState("");
  const field=(label:string,value:string,set:(v:string)=>void,type="text",placeholder="")=><div className="field"><label>{label}</label><input type={type} value={value} onChange={e=>set(e.target.value)} placeholder={placeholder}/></div>;
  const needFile=tool.kind==="image"||tool.kind==="ocr",needPdf=tool.kind==="pdf";
+ const batchable=needFile||needPdf;
  const run=async()=>{
   setStatus("Working…");setError("");setResult("");setShort("");setQr("");
   try{
