@@ -111,7 +111,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
  };
  return <div className="card runner">
   <div className="runnerhead"><div><h2>Use {tool.name}</h2><div className="sub">No account required. Browser-first where practical.</div></div><span className="pill">{tool.category.toUpperCase()}</span></div>
-  {(needFile||needPdf||needResume)&&<div className="upload">
+  {(needFile||needPdf||needResume||needVideo)&&<div className="upload">
    <input id="tool-input" type="file" accept={needVideo?"video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.flv,.wmv,.asf,.mpeg,.mpg,.m2v,.3gp,.3g2,.ts,.mts,.m2ts,.vob,.ogv,.ogg,.rm,.rmvb,.divx,.f4v,.mxf,.dv":needResume?".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(!incoming.length)return;setFiles(prev=>{const seen=new Set(prev.map(x=>x.name+"|"+x.size+"|"+x.lastModified));const next=[...prev,...incoming.filter(x=>!seen.has(x.name+"|"+x.size+"|"+x.lastModified))];setFile(next[0]||null);return next});e.currentTarget.value=""}}/>
    <div className="runactions" style={{justifyContent:"center"}}>
     <button type="button" className="btn" onClick={()=>document.getElementById("tool-input")?.click()}>{files.length?"Add more files":needResume?"Choose resume":needVideo?"Choose video(s)":"Choose file(s)"}</button>
