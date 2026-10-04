@@ -10,12 +10,24 @@ async function bestJpeg(c:HTMLCanvasElement,goal:number){
  }
  return best;
 }
-export async function runImage(slug:string,file:File,target:string,width:string,height:string,threshold:string){
+export async function runImage(slug:string,file:File,target:string,width:string,height:string,threshold:string,scanMode="bw"){
  if(!file)throw Error("Choose an image first.");
  if(slug==="heic-to-jpg"){const h=(await import("heic2any")).default,z=await h({blob:file,toType:"image/jpeg",quality:.9});return{blob:Array.isArray(z)?z[0]:z,name:"converted.jpg",message:"Converted HEIC to JPG."}}
  const im=await readImage(file),c=document.createElement("canvas"),ctx=c.getContext("2d");
  if(!ctx)throw Error("Canvas unavailable.");
  let w=im.naturalWidth,h=im.naturalHeight;
+ if(slug==="scan-image"){
+  const d=ctx.getImageData(0,0,w,h);
+  const mode=scanMode==="grayscale"?"grayscale":"bw";
+  for(let i=0;i<d.data.length;i+=4){
+   const gray=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2];
+   const boosted=Math.max(0,Math.min(255,(gray-128)*1.35+128));
+   const v=mode==="bw"?(boosted>178?255:0):boosted;
+   d.data[i]=v;d.data[i+1]=v;d.data[i+2]=v;
+  }
+  ctx.putImageData(d,0,0);
+  return{blob:await toBlob(c,"image/jpeg",.94),name:"scanned-image.jpg",message:mode==="bw"?"Created a clean black-and-white scanned image.":"Created a high-contrast grayscale scanned image."};
+ }
  if(slug==="resize-image"){w=Math.max(1,Number(width)||800);h=Math.max(1,Number(height)||800)}
  if(slug==="photo-smaller"){const m=Math.max(200,Number(width)||1200),s=Math.min(1,m/Math.max(w,h));w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s))}
  if(slug==="passport-photo"){w=413;h=531}
