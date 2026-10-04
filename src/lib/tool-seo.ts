@@ -9,7 +9,25 @@ export type ToolSeo={
   relatedGuides:string[];
 };
 
-const custom:Record<string,ToolSeo>={
+const custom:Record<string,ToolSeo>={ "video-to-audio":{
+  metaDescription:"Convert video to MP3, WAV, M4A, AAC, FLAC, OGG or OPUS in your browser. Supports common video formats and uses MP3 by default.",
+  keywords:["video to audio","video to MP3","video to WAV","convert video to audio","extract audio from video","MP4 to MP3","MOV to MP3","MKV to MP3"],
+  intro:"Extract audio from a video file directly in your browser. MP3 is selected by default, with WAV, M4A, AAC, FLAC, OGG and OPUS available when you need another format.",
+  sections:[
+   {heading:"Convert video to MP3, WAV and other audio formats",body:"Choose a video, keep MP3 as the default output or select another audio format, then run the converter. The tool extracts the first available audio stream and downloads the result using the source filename."},
+   {heading:"Supported video files",body:"The file picker accepts common containers such as MP4, M4V, MOV, WebM, MKV, AVI, FLV, WMV, MPEG, MPG, 3GP, TS, MTS, M2TS, VOB, OGV, RM, RMVB, DIVX and MXF. FFmpeg inspects file contents, so codec availability can still affect whether a particular file converts successfully."},
+   {heading:"Choose the right audio format",body:"MP3 is the broadly compatible default. WAV is useful when you want uncompressed PCM audio. FLAC preserves lossless audio in a compressed container, while M4A/AAC, OGG and OPUS are useful when you want smaller encoded files."},
+   {heading:"Browser-first processing",body:"Conversion runs inside the browser with FFmpeg WebAssembly. Large videos can take significant CPU time and memory, so keep the original file and verify the downloaded audio before deleting it."}
+  ],
+  faqs:[
+   {q:"Is MP3 the default output?",a:"Yes. MP3 is selected by default, and you can switch to WAV, M4A, AAC, FLAC, OGG or OPUS."},
+   {q:"Can I convert MP4 to MP3?",a:"Yes. MP4 is one of the common video containers accepted by the tool, provided the file contains an audio stream the converter can decode."},
+   {q:"Can I convert MOV or MKV to MP3?",a:"Yes, common MOV and MKV files are accepted. The exact result depends on the codecs and whether an audio stream is present."},
+   {q:"Are my videos uploaded?",a:"The conversion is performed locally in your browser. The site does not maintain a permanent file library for this tool."}
+  ],
+  relatedGuides:[]
+ },
+
  "compress-image":{
   metaDescription:"Compress JPG, PNG and WebP images to 100KB, 500KB, 1MB or a custom target size in your browser.",
   keywords:["image compressor","compress image","compress JPG","compress PNG","compress WebP","reduce image size","compress image to 100KB","compress image to 500KB"],
