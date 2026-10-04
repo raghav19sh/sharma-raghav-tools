@@ -12,3 +12,4 @@ export default function Privacy(){return <div className="site"><Header/><main cl
 <p>Google AdSense may be enabled after approval. Advertising providers may use cookies or similar technologies under their own policies and applicable consent requirements. Advertising does not require your uploaded file to be sent to our server for the browser-based file tools.</p>
 <h2>Contact</h2>
 <p>Questions can be sent to <a href="mailto:contact@sharma-raghav.com">contact@sharma-raghav.com</a>.</p></main></div>
+}

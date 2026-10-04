@@ -7,6 +7,11 @@ import {runImage,saveBlob} from "@/lib/image-tools";
 import {runPdf} from "@/lib/pdf-tools";
 import {zoned,qrCode,strongPassword,ocr} from "@/lib/utility-tools";
 
+const stem=(name:string)=>name.replace(/\.[^/.]+$/,"");
+const withSourceName=(source:string,output:string)=>{const dot=output.lastIndexOf(".");if(dot<0)return stem(source)+"-"+output;return stem(source)+"-"+output.slice(0,dot)+output.slice(dot);};
+const saveText=(value:string,name:string)=>saveBlob(new Blob([value],{type:"text/plain;charset=utf-8"}),name);
+const pause=(ms:number)=>new Promise<void>(resolve=>window.setTimeout(resolve,ms));
+
 export default function ToolRunner({tool}:{tool:Tool}){
  const [file,setFile]=useState<File|null>(null),[files,setFiles]=useState<File[]>([]);
  const [a,setA]=useState(""),[b,setB]=useState(""),[c,setC]=useState(""),[page,setPage]=useState("1");
@@ -18,9 +23,55 @@ export default function ToolRunner({tool}:{tool:Tool}){
  const run=async()=>{
   setStatus("Working…");setError("");setResult("");setShort("");setQr("");
   try{
-   if(tool.kind==="ocr"){setResult(await ocr(file as File))}
-   else if(needFile){const x=await runImage(tool.slug,file as File,b,b,c,tool.slug==="signature-image"?c:page);saveBlob(x.blob,x.name);setResult(x.message)}
-   else if(needPdf){const inputFiles=tool.slug==="word-to-pdf"?[files[0]||file as File]:files;const x=await runPdf(tool.slug,inputFiles,page);saveBlob(x.blob,x.name);setResult(x.message)}
+   if(tool.kind==="ocr"){
+   const selected=files.length?files:(file?[file]:[]);
+   if(!selected.length)throw Error("Choose at least one image first.");
+   const outputs:string[]=[];
+   for(let i=0;i<selected.length;i++){
+    const f=selected[i];
+    setStatus(selected.length>1?"Processing "+(i+1)+"/"+selected.length+"…":"Working…");
+    const text=await ocr(f);
+    outputs.push(f.name+":\n"+(text||"No readable text detected."));
+    saveText(text||"No readable text detected.",withSourceName(f.name,"ocr.txt"));
+    if(i<selected.length-1)await pause(100);
+   }
+   setResult(selected.length===1?outputs[0]:"Processed "+selected.length+" images. OCR text was downloaded for each file.\n\n"+outputs.join("\n\n---\n\n"));
+  }
+   else if(needFile){
+   const selected=files.length?files:(file?[file]:[]);
+   if(!selected.length)throw Error("Choose at least one file first.");
+   const outputs:string[]=[];
+   for(let i=0;i<selected.length;i++){
+    const f=selected[i];
+    setStatus(selected.length>1?"Processing "+(i+1)+"/"+selected.length+"…":"Working…");
+    const x=await runImage(tool.slug,f,b,b,c,tool.slug==="signature-image"?c:page);
+    saveBlob(x.blob,withSourceName(f.name,x.name));
+    outputs.push(f.name+": "+x.message);
+    if(i<selected.length-1)await pause(100);
+   }
+   setResult(selected.length===1?outputs[0]:"Processed "+selected.length+" images and downloaded "+selected.length+" results.\n\n"+outputs.join("\n"));
+  }
+   else if(needPdf){
+   const selected=files.length?files:(file?[file]:[]);
+   if(!selected.length)throw Error("Choose at least one file first.");
+   if(tool.slug==="merge-pdf"||tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"){
+    setStatus("Processing "+selected.length+" files…");
+    const x=await runPdf(tool.slug,selected,page);
+    saveBlob(x.blob,x.name);
+    setResult(x.message);
+   }else{
+    const outputs:string[]=[];
+    for(let i=0;i<selected.length;i++){
+     const f=selected[i];
+     setStatus(selected.length>1?"Processing "+(i+1)+"/"+selected.length+"…":"Working…");
+     const x=await runPdf(tool.slug,[f],page);
+     saveBlob(x.blob,withSourceName(f.name,x.name));
+     outputs.push(f.name+": "+x.message);
+     if(i<selected.length-1)await pause(100);
+    }
+    setResult(selected.length===1?outputs[0]:"Processed "+selected.length+" files and downloaded "+selected.length+" results.\n\n"+outputs.join("\n"));
+   }
+  }
    else if(tool.kind==="calc")setResult(calculate(tool.slug,a,b,c,people))
    else if(tool.kind==="convert")setResult(convert(tool.slug,a,mode))
    else if(tool.kind==="timezone")setResult(new Intl.DateTimeFormat("en-GB",{timeZone:to,dateStyle:"full",timeStyle:"long"}).format(zoned(dt,from)))
@@ -34,7 +85,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
  };
  return <div className="card runner">
   <div className="runnerhead"><div><h2>Use {tool.name}</h2><div className="sub">No account required. Browser-first where practical.</div></div><span className="pill">{tool.category.toUpperCase()}</span></div>
-  {(needFile||needPdf)&&<div className="upload"><label htmlFor="tool-input" className="btn">{tool.slug==="word-to-pdf"?"Choose Word file":needPdf?"Choose file(s)":"Choose file"}</label><input id="tool-input" type="file" accept={tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={tool.slug==="merge-pdf"||tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"} onChange={e=>{const x=Array.from(e.target.files||[]);setFile(x[0]||null);setFiles(x)}}/><div className="meta">{files.length?files.map(x=>x.name).join(" • "):file?.name||"Select an input file"}</div></div>}
+  {(needFile||needPdf)&&<div className="upload"><label htmlFor="tool-input" className="btn">{tool.slug==="word-to-pdf"?"Choose Word file(s)":needPdf?"Choose PDF file(s)":"Choose image file(s)"}</label><input id="tool-input" type="file" accept={tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const x=Array.from(e.target.files||[]);setFile(x[0]||null);setFiles(x)}}/><div className="meta">{files.length?(files.length+" file"+(files.length===1?"":"s")+" selected: "+files.map(x=>x.name).join(" • ")):file?.name||"Select one or more files"}</div></div>}{batchable&&<div className="sub">Select multiple files to process them in one run.</div>}
   {tool.slug==="compress-image"&&<div className="form">{field("Target size (KB)",b,setB,"number","100")}<div className="presets"><button type="button" className="btn" onClick={()=>setB("100")}>100 KB</button><button type="button" className="btn" onClick={()=>setB("500")}>500 KB</button><button type="button" className="btn" onClick={()=>setB("1000")}>1 MB</button></div></div>}
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
