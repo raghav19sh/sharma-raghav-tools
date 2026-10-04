@@ -3,7 +3,8 @@ const pdfBlob=(x:Uint8Array)=>new Blob([x as unknown as BlobPart],{type:"applica
 
 async function extractPdfText(data:ArrayBuffer){
  const pdfjs=await import("pdfjs-dist/legacy/build/pdf.mjs");
- const doc=await pdfjs.getDocument({data,disableWorker:true}).promise;
+ pdfjs.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.worker.min.mjs";
+ const doc=await pdfjs.getDocument({data}).promise;
  const texts:string[]=[];
  for(let i=1;i<=doc.numPages;i++){
   const pg=await doc.getPage(i),ct=await pg.getTextContent();
