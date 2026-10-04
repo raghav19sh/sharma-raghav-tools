@@ -7,6 +7,7 @@ import {runImage,saveBlob} from "@/lib/image-tools";
 import {runPdf} from "@/lib/pdf-tools";
 import {scoreResume} from "@/lib/resume-tools";
 import {zoned,qrCode,strongPassword,ocr} from "@/lib/utility-tools";
+import {convertVideoToAudio,type AudioFormat} from "@/lib/video-audio-tools";
 
 const stem=(name:string)=>name.replace(/\.[^/.]+$/,"");
 const withSourceName=(source:string,output:string)=>{const dot=output.lastIndexOf(".");if(dot<0)return stem(source)+"-"+output;return stem(source)+"-"+output.slice(0,dot)+output.slice(dot);};
@@ -18,15 +19,29 @@ export default function ToolRunner({tool}:{tool:Tool}){
  const [a,setA]=useState(""),[b,setB]=useState(""),[c,setC]=useState(""),[page,setPage]=useState("1");
  const [mode,setMode]=useState("pretty"),[people,setPeople]=useState("5"),[from,setFrom]=useState("Asia/Kolkata"),[to,setTo]=useState("Europe/Paris");
  const [scanMode,setScanMode]=useState("bw"),[editOperation,setEditOperation]=useState("text"),[editText,setEditText]=useState(""),[editX,setEditX]=useState("50"),[editY,setEditY]=useState("50"),[editSize,setEditSize]=useState("14");
- const [dt,setDt]=useState("2026-10-04T18:00"),[len,setLen]=useState("20"),[symbols,setSymbols]=useState(true);
+ const [dt,setDt]=useState("2026-10-04T18:00"),[len,setLen]=useState("20"),[symbols,setSymbols]=useState(true),[audioFormat,setAudioFormat]=useState<AudioFormat>("mp3");
  const [status,setStatus]=useState(""),[error,setError]=useState(""),[result,setResult]=useState(""),[short,setShort]=useState(""),[qr,setQr]=useState("");
  const field=(label:string,value:string,set:(v:string)=>void,type="text",placeholder="")=><div className="field"><label>{label}</label><input type={type} value={value} onChange={e=>set(e.target.value)} placeholder={placeholder}/></div>;
- const needFile=tool.kind==="image"||tool.kind==="ocr",needPdf=tool.kind==="pdf",needResume=tool.kind==="resume";
- const batchable=needFile||needPdf;
+ const needFile=tool.kind==="image"||tool.kind==="ocr",needPdf=tool.kind==="pdf",needResume=tool.kind==="resume",needVideo=tool.kind==="video-audio";
+ const batchable=needFile||needPdf||needVideo;
  const run=async()=>{
   setStatus("Working…");setError("");setResult("");setShort("");setQr("");
   try{
-   if(tool.kind==="resume"){
+   if(tool.kind==="video-audio"){
+    const selected=files.length?files:(file?[file]:[]);
+    if(!selected.length)throw Error("Choose at least one video first.");
+    const outputs:string[]=[];
+    for(let i=0;i<selected.length;i++){
+     const f=selected[i];
+     setStatus(selected.length>1?"Loading / converting "+(i+1)+"/"+selected.length+"…":"Loading converter…");
+     const x=await convertVideoToAudio(f,audioFormat,p=>setStatus((selected.length>1?"Converting "+(i+1)+"/"+selected.length:"Converting")+"… "+Math.round(p*100)+"%"));
+     saveBlob(x.blob,x.name);
+     outputs.push(f.name+" → "+x.name);
+     if(i<selected.length-1)await pause(100);
+    }
+    setResult(selected.length===1?"Audio extracted and downloaded as "+audioFormat.toUpperCase()+".":outputs.join("\n"));
+   }
+   else if(tool.kind==="resume"){
     const resume=file||files[0];
     if(!resume)throw Error("Choose a PDF or DOCX resume first.");
     setStatus("Analyzing resume…");
@@ -97,9 +112,9 @@ export default function ToolRunner({tool}:{tool:Tool}){
  return <div className="card runner">
   <div className="runnerhead"><div><h2>Use {tool.name}</h2><div className="sub">No account required. Browser-first where practical.</div></div><span className="pill">{tool.category.toUpperCase()}</span></div>
   {(needFile||needPdf||needResume)&&<div className="upload">
-   <input id="tool-input" type="file" accept={needResume?".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(!incoming.length)return;setFiles(prev=>{const seen=new Set(prev.map(x=>x.name+"|"+x.size+"|"+x.lastModified));const next=[...prev,...incoming.filter(x=>!seen.has(x.name+"|"+x.size+"|"+x.lastModified))];setFile(next[0]||null);return next});e.currentTarget.value=""}}/>
+   <input id="tool-input" type="file" accept={needVideo?"video/*,.mp4,.m4v,.mov,.webm,.mkv,.avi,.flv,.wmv,.asf,.mpeg,.mpg,.m2v,.3gp,.3g2,.ts,.mts,.m2ts,.vob,.ogv,.ogg,.rm,.rmvb,.divx,.f4v,.mxf,.dv":needResume?".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(!incoming.length)return;setFiles(prev=>{const seen=new Set(prev.map(x=>x.name+"|"+x.size+"|"+x.lastModified));const next=[...prev,...incoming.filter(x=>!seen.has(x.name+"|"+x.size+"|"+x.lastModified))];setFile(next[0]||null);return next});e.currentTarget.value=""}}/>
    <div className="runactions" style={{justifyContent:"center"}}>
-    <button type="button" className="btn" onClick={()=>document.getElementById("tool-input")?.click()}>{files.length?"Add more files":needResume?"Choose resume":"Choose file(s)"}</button>
+    <button type="button" className="btn" onClick={()=>document.getElementById("tool-input")?.click()}>{files.length?"Add more files":needResume?"Choose resume":needVideo?"Choose video(s)":"Choose file(s)"}</button>
     {files.length>0&&<button type="button" className="btn" onClick={()=>{setFiles([]);setFile(null)}}>Clear selection</button>}
    </div>
    <div className="meta">{files.length?(files.length+" file"+(files.length===1?"":"s")+" selected: "+files.map(x=>x.name).join(" • ")):file?.name||"Select one or more files"}</div>
@@ -109,6 +124,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
   {tool.slug==="signature-image"&&<div className="form">{field("Cleanup threshold",c,setC,"number","235")}</div>}
+  {tool.slug==="video-to-audio"&&<div className="form"><div className="field"><label>Audio format</label><select value={audioFormat} onChange={e=>setAudioFormat(e.target.value as AudioFormat)}><option value="mp3">MP3 (default)</option><option value="wav">WAV</option><option value="m4a">M4A</option><option value="aac">AAC</option><option value="flac">FLAC</option><option value="ogg">OGG</option><option value="opus">OPUS</option></select></div></div>}
   {tool.slug==="ats-resume-score"&&<div className="form"><div className="field full"><label>Target job description (optional)</label><textarea value={a} onChange={e=>setA(e.target.value)} placeholder="Paste the job description here to measure keyword alignment…"/></div></div>}
   {tool.slug==="scan-image"&&<div className="form"><div className="field"><label>Scan mode</label><select value={scanMode} onChange={e=>setScanMode(e.target.value)}><option value="bw">Black & white</option><option value="grayscale">Grayscale</option></select></div></div>}
   {tool.slug==="extract-pdf-page"&&<div className="form">{field("Page number",page,setPage,"number","1")}</div>}
