@@ -1,5 +1,5 @@
-export type CategoryId="image"|"pdf"|"calc"|"convert"|"text"|"utility";
-export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"|"password"|"ocr";
+export type CategoryId="image"|"pdf"|"calc"|"convert"|"text"|"utility"|"career";
+export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"|"password"|"ocr"|"resume";
 export type Tool={slug:string;name:string;short:string;description:string;category:CategoryId;kind:ToolKind;steps:string[];uses:string[]};
 
 const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
@@ -21,6 +21,7 @@ const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
 ["word-to-pdf","Convert Word to PDF","Convert a DOCX Word document into a text-based PDF.","pdf","pdf"],
 ["scan-pdf","Make a scanned PDF","Rasterize PDF pages into a scanned-style, image-only PDF.","pdf","pdf"],
 ["edit-pdf","Edit PDF","Add text, rotate pages, or delete pages from a PDF.","pdf","pdf"],
+["ats-resume-score","ATS Resume Score Checker","Score a PDF or DOCX resume for ATS readability, sections, impact and job-keyword alignment.","career","resume"],
 ["days-between-dates","How many days between two dates?","Count calendar days between two dates.","calc","calc"],
 ["day-of-date","What day was 15 August 2004?","Find the weekday for any date.","calc","calc"],
 ["percentage-increase","Calculate percentage increase","Calculate percentage change from old to new.","calc","calc"],
@@ -57,7 +58,8 @@ pdf:["Choose your PDF or image input.","Set the requested page or options.","Run
 calc:["Enter the values.","Check the assumptions shown by the tool.","Run the calculation and read the result."],
 convert:["Enter a value.","Choose the conversion direction or unit.","Read or copy the converted value."],
 text:["Paste or enter your text.","Choose any available mode.","Run the tool and copy the result."],
-utility:["Enter or choose your input.","Run the utility.","Copy or download the result."]
+utility:["Enter or choose your input.","Run the utility.","Copy or download the result."],
+career:["Choose your resume.","Optionally paste the target job description.","Run the checker and review the score and recommendations."]
 };
 
 const usesBy:Record<CategoryId,string[]>={
@@ -66,7 +68,8 @@ pdf:["Applications","Reports","Document cleanup"],
 calc:["Planning","Budgeting","Everyday math"],
 convert:["Travel","Work and study","Everyday measurements"],
 text:["Development","Data cleanup","Writing and editing"],
-utility:["Sharing","Security hygiene","Scans and screenshots"]
+utility:["Sharing","Security hygiene","Scans and screenshots"],
+career:["Job applications","Resume tailoring","Career preparation"]
 };
 
 export const tools:Tool[]=rows.map(([slug,name,short,category,kind])=>({
@@ -81,7 +84,8 @@ export const categories=[
 {id:"calc" as const,name:"Calculators",description:"Fast everyday date, money and planning math."},
 {id:"convert" as const,name:"Converters",description:"Units, temperatures, sizes and time zones."},
 {id:"text" as const,name:"Text & developer",description:"JSON, comparison, counting and cleanup."},
-{id:"utility" as const,name:"Utilities",description:"QR codes, passwords and OCR."}
+{id:"utility" as const,name:"Utilities",description:"QR codes, passwords and OCR."},
+{id:"career" as const,name:"Career tools",description:"Resume analysis and job-application helpers."}
 ];
 
 export function getTool(slug:string){return tools.find(t=>t.slug===slug);}
