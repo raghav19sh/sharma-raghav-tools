@@ -1,5 +1,5 @@
 export type CategoryId="image"|"pdf"|"calc"|"convert"|"text"|"utility"|"career";
-export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"|"password"|"ocr"|"resume";
+export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"|"password"|"ocr"|"resume"|"video-audio";
 export type Tool={slug:string;name:string;short:string;description:string;category:CategoryId;kind:ToolKind;steps:string[];uses:string[]};
 
 const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
@@ -49,7 +49,8 @@ const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
 ["url-shortener","Make a URL shorter","Create a short shareable URL using an external service.","text","url"],
 ["qr-generator","Generate QR code","Create a downloadable QR code locally.","utility","qr"],
 ["password-generator","Generate strong password","Generate random passwords with Web Crypto.","utility","password"],
-["extract-text-image","Extract text from image","Run OCR on an image in your browser.","utility","ocr"]
+["extract-text-image","Extract text from image","Run OCR on an image in your browser.","utility","ocr"],
+["video-to-audio","Convert video to audio","Extract audio from video files in your browser and export it as MP3, WAV, M4A, AAC, FLAC, OGG or OPUS.","utility","video-audio"]
 ];
 
 const stepsBy:Record<CategoryId,string[]>={
