@@ -20,7 +20,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
   try{
    if(tool.kind==="ocr"){setResult(await ocr(file as File))}
    else if(needFile){const x=await runImage(tool.slug,file as File,b,b,c,tool.slug==="signature-image"?c:page);saveBlob(x.blob,x.name);setResult(x.message)}
-   else if(needPdf){const x=await runPdf(tool.slug,files,page);saveBlob(x.blob,x.name);setResult(x.message)}
+   else if(needPdf){const inputFiles=tool.slug==="word-to-pdf"?[files[0]||file as File]:files;const x=await runPdf(tool.slug,inputFiles,page);saveBlob(x.blob,x.name);setResult(x.message)}
    else if(tool.kind==="calc")setResult(calculate(tool.slug,a,b,c,people))
    else if(tool.kind==="convert")setResult(convert(tool.slug,a,mode))
    else if(tool.kind==="timezone")setResult(new Intl.DateTimeFormat("en-GB",{timeZone:to,dateStyle:"full",timeStyle:"long"}).format(zoned(dt,from)))
@@ -34,8 +34,8 @@ export default function ToolRunner({tool}:{tool:Tool}){
  };
  return <div className="card runner">
   <div className="runnerhead"><div><h2>Use {tool.name}</h2><div className="sub">No account required. Browser-first where practical.</div></div><span className="pill">{tool.category.toUpperCase()}</span></div>
-  {(needFile||needPdf)&&<div className="upload"><label htmlFor="tool-input" className="btn">{needPdf?"Choose file(s)":"Choose file"}</label><input id="tool-input" type="file" accept={tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"?"image/png,image/jpeg":needPdf?".pdf":"image/*"} multiple={tool.slug==="merge-pdf"||tool.slug==="screenshot-to-pdf"} onChange={e=>{const x=Array.from(e.target.files||[]);setFile(x[0]||null);setFiles(x)}}/><div className="meta">{files.length?files.map(x=>x.name).join(" • "):file?.name||"Select an input file"}</div></div>}
-  {tool.slug==="compress-image"&&<div className="form">{field("Target size (KB)",b,setB,"number","100")}</div>}
+  {(needFile||needPdf)&&<div className="upload"><label htmlFor="tool-input" className="btn">{tool.slug==="word-to-pdf"?"Choose Word file":needPdf?"Choose file(s)":"Choose file"}</label><input id="tool-input" type="file" accept={tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={tool.slug==="merge-pdf"||tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"} onChange={e=>{const x=Array.from(e.target.files||[]);setFile(x[0]||null);setFiles(x)}}/><div className="meta">{files.length?files.map(x=>x.name).join(" • "):file?.name||"Select an input file"}</div></div>}
+  {tool.slug==="compress-image"&&<div className="form">{field("Target size (KB)",b,setB,"number","100")}<div className="presets"><button type="button" className="btn" onClick={()=>setB("100")}>100 KB</button><button type="button" className="btn" onClick={()=>setB("500")}>500 KB</button><button type="button" className="btn" onClick={()=>setB("1000")}>1 MB</button></div></div>}
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
   {tool.slug==="signature-image"&&<div className="form">{field("Cleanup threshold",c,setC,"number","235")}</div>}

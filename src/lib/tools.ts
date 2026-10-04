@@ -3,7 +3,7 @@ export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"
 export type Tool={slug:string;name:string;short:string;description:string;category:CategoryId;kind:ToolKind;steps:string[];uses:string[]};
 
 const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
-["compress-image","Compress image to 100KB","Reduce an image toward a 100KB target.","image","image"],
+["compress-image","Compress image to target size","Compress an image to a size you choose, such as 100KB or 500KB.","image","image"],
 ["resize-image","Resize image to exact size","Resize an image to precise pixel dimensions.","image","image"],
 ["remove-background","Remove background from image","Create a transparent-background PNG.","image","image"],
 ["heic-to-jpg","Convert HEIC to JPG","Convert HEIC images to widely supported JPG.","image","image"],
@@ -14,7 +14,10 @@ const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
 ["remove-blank-pages-pdf","Remove blank pages from PDF","Remove pages with no selectable text.","pdf","pdf"],
 ["extract-pdf-page","Extract one page from PDF","Export one chosen PDF page as a new PDF.","pdf","pdf"],
 ["pdf-to-word","Convert PDF to Word","Extract selectable PDF text into DOCX.","pdf","pdf"],
-["screenshot-to-pdf","Turn screenshot into PDF","Create a PDF from a PNG or JPG screenshot.","pdf","pdf"],
+["screenshot-to-pdf","Turn screenshot into PDF","Create a PDF from one or more PNG or JPG screenshots.","pdf","pdf"],
+["images-to-pdf","Images to sequenced PDF","Combine many images into one PDF in the order you select them.","pdf","pdf"],
+["pdf-to-docs","Convert PDF to Google Docs","Convert selectable PDF text into a DOCX file you can open in Google Docs.","pdf","pdf"],
+["word-to-pdf","Convert Word to PDF","Convert a DOCX Word document into a text-based PDF.","pdf","pdf"],
 ["days-between-dates","How many days between two dates?","Count calendar days between two dates.","calc","calc"],
 ["day-of-date","What day was 15 August 2004?","Find the weekday for any date.","calc","calc"],
 ["percentage-increase","Calculate percentage increase","Calculate percentage change from old to new.","calc","calc"],
