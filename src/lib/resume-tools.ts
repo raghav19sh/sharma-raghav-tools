@@ -115,7 +115,7 @@ export async function scoreResume(file:File,jobDescription:string){
   report:`ATS RESUME SCORE: ${total}/100
 ${band}
 
-${scoreParts.map(p=>p[0]+": "+p[1]+"/"+p[2]+" — "+p[3]).join("\n")}
+${scoreParts.map(p=>p.name+": "+p.score+"/"+p.max+" — "+p.note).join("\n")}
 
 TOP IMPROVEMENTS
 ${recommendations.map((r,i)=>(i+1)+". "+r).join("\n")}
