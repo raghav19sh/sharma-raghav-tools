@@ -1,0 +1,3 @@
+import Link from "next/link";
+const Header=()=> <header className="topbar"><div className="container nav"><Link className="brand" href="/"><span className="mark">SR</span><span>Sharma-Raghav Tools</span></Link><Link href="/">← All tools</Link></div></header>;
+export default function Contact(){return <div className="site"><Header/><main className="container legal"><h1>Contact</h1><p>Found a broken tool, incorrect result, accessibility issue or other problem?</p><p>Email <a href="mailto:contact@sharma-raghav.com">contact@sharma-raghav.com</a> with the tool URL and a short description.</p></main></div>}
