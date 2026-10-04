@@ -44,6 +44,46 @@ export async function runPdf(slug:string,files:File[],page:string){
   return{blob:pdfBlob(await out.save()),name:"images.pdf",message:"Created PDF with "+files.length+" image page"+(files.length===1?"":"s")+" in the selected sequence."};
  }
 
+ if(slug==="pdf-to-word"||slug==="pdf-to-docs"){
+  const {doc,texts}=await extractPdfText(await files[0].arrayBuffer());
+  if(!texts.some(Boolean))throw Error("No selectable text found. Scanned/image-only PDFs need OCR first.");
+  const {Document,Packer,Paragraph,TextRun}=await import("docx");
+  const word=new Document({sections:[{children:texts.map(x=>new Paragraph({children:[new TextRun(x||" ")]}))}]});
+  return{
+   blob:await Packer.toBlob(word),
+   name:slug==="pdf-to-docs"?"google-docs-compatible.docx":"converted.docx",
+   message:"Created DOCX from "+doc.numPages+" PDF pages."
+  };
+ }
+
+ if(slug==="word-to-pdf"){
+  const mammoth=(await import("mammoth")).default;
+  const raw=await mammoth.extractRawText({arrayBuffer:await files[0].arrayBuffer()});
+  const {rgb,StandardFonts}=await import("pdf-lib");
+  const out=await PDFDocument.create();
+  const font=await out.embedFont(StandardFonts.Helvetica);
+  const size=11,margin=50,lineHeight=15,maxWidth=495;
+  const wrap=(line:string)=>{
+   const words=line.split(/\s+/).filter(Boolean);
+   if(!words.length)return[""];
+   const rows:string[]=[];let cur="";
+   for(const word of words){
+    const next=cur?cur+" "+word:word;
+    if(font.widthOfTextAtSize(next,size)<=maxWidth)cur=next;
+    else{if(cur)rows.push(cur);cur=word;}
+   }
+   if(cur)rows.push(cur);return rows;
+  };
+  let p=out.addPage(),y=p.getHeight()-margin;
+  for(const rawLine of raw.value.split(/\r?\n/)){
+   for(const line of wrap(rawLine)){
+    if(y<margin){p=out.addPage();y=p.getHeight()-margin;}
+    p.drawText(line,{x:margin,y,size,font,color:rgb(0,0,0)});y-=lineHeight;
+   }
+  }
+  return{blob:pdfBlob(await out.save()),name:"converted.pdf",message:"Created a text-based PDF from the Word document."};
+ }
+
  const source=await PDFDocument.load(await files[0].arrayBuffer());
 
  if(slug==="extract-pdf-page"){
