@@ -35,7 +35,7 @@ async function scanPdfText(data:ArrayBuffer){
    if(!ctx)throw Error("Canvas unavailable.");
    canvas.width=Math.ceil(viewport.width);
    canvas.height=Math.ceil(viewport.height);
-   await pg.render({canvasContext:ctx,viewport}).promise;
+   await pg.render({canvasContext:ctx,canvas,viewport}).promise;
    const result=await worker.recognize(canvas);
    texts.push(result.data.text.trim());
    canvas.width=1;
