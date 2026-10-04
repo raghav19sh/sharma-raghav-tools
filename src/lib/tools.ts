@@ -1,8 +1,9 @@
-export type CategoryId="image"|"pdf"|"calc"|"convert"|"text"|"utility"|"career";
-export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"|"password"|"ocr"|"resume"|"video-audio";
+export type CategoryId="image"|"pdf"|"calc"|"convert"|"text"|"utility"|"career"|"cyber";
+export type ToolKind="image"|"pdf"|"calc"|"convert"|"timezone"|"text"|"url"|"qr"|"password"|"ocr"|"resume"|"video-audio"|"cyber";
 export type Tool={slug:string;name:string;short:string;description:string;category:CategoryId;kind:ToolKind;steps:string[];uses:string[]};
 
 const rows:Array<[string,string,string,CategoryId,ToolKind]>=[
+["http-security-header-analyzer","HTTP Security Header Analyzer","Analyze CSP, HSTS, X-Frame-Options, cookies and other HTTP security headers.","cyber","cyber"],["jwt-analyzer","JWT Analyzer","Decode JWT header and payload, inspect claims, algorithm and expiry.","cyber","cyber"],["hash-generator","Hash Generator","Generate SHA-1, SHA-256, SHA-384 and SHA-512 hashes.","cyber","cyber"],["hash-identifier","Hash Identifier","Identify likely hash families from hexadecimal length and format.","cyber","cyber"],["base64-url-hex","Base64 / URL / Hex Encoder","Encode and decode Base64 and hexadecimal data.","cyber","cyber"],["url-domain-analyzer","URL / Domain Analyzer","Inspect protocol, hostname, port, path, query and origin.","cyber","cyber"],["password-strength-analyzer","Password Strength Analyzer","Estimate password strength, entropy and common weakness signals.","cyber","cyber"],["regex-security-tester","Regex Security Tester","Validate regex patterns and flag common ReDoS risk patterns.","cyber","cyber"],["csp-generator","CSP Generator","Build a Content-Security-Policy header interactively.","cyber","cyber"],["security-txt-generator","Security.txt Generator","Generate a security.txt file for vulnerability disclosure.","cyber","cyber"],["ip-cidr-calculator","IP / CIDR Calculator","Calculate network, broadcast, mask and usable host ranges.","cyber","cyber"],["dns-record-analyzer","DNS Record Analyzer","Look up A, AAAA, CNAME, MX, TXT and NS records.","cyber","cyber"],["tls-ssl-analyzer","TLS/SSL Analyzer","Inspect TLS protocol, cipher and peer certificate details.","cyber","cyber"],["whois-rdap-lookup","WHOIS/RDAP Lookup","Look up domain registration events, status and nameservers.","cyber","cyber"],["file-hash-calculator","File Hash Calculator","Calculate SHA-256 and other cryptographic hashes for a file.","cyber","cyber"],["exif-metadata-viewer","Exif/Metadata Viewer","Inspect image metadata and basic JPEG EXIF segments locally.","cyber","cyber"],["qr-security-analyzer","QR Security Analyzer","Inspect a QR destination and flag common suspicious URL characteristics.","cyber","cyber"],["ioc-analyzer","IOC Analyzer","Classify and normalize IP, domain and hash indicators.","cyber","cyber"],["yara-rule-tester","YARA Rule Tester","Test simple quoted YARA string indicators against a local file.","cyber","cyber"],["log-analyzer","Log Analyzer","Analyze logs for brute-force, error, SQLi and XSS indicators.","cyber","cyber"],["pcap-analyzer","PCAP Analyzer","Summarize packets and basic TCP, UDP and ICMP counts from PCAP files.","cyber","cyber"],
 ["compress-image","Compress image to target size","Compress an image to a size you choose, such as 100KB or 500KB.","image","image"],
 ["resize-image","Resize image to exact size","Resize an image to precise pixel dimensions.","image","image"],
 ["remove-background","Remove background from image","Create a transparent-background PNG.","image","image"],
@@ -60,7 +61,8 @@ calc:["Enter the values.","Check the assumptions shown by the tool.","Run the ca
 convert:["Enter a value.","Choose the conversion direction or unit.","Read or copy the converted value."],
 text:["Paste or enter your text.","Choose any available mode.","Run the tool and copy the result."],
 utility:["Enter or choose your input.","Run the utility.","Copy or download the result."],
-career:["Choose your resume.","Optionally paste the target job description.","Run the checker and review the score and recommendations."]
+career:["Choose your resume.","Optionally paste the target job description.","Run the checker and review the score and recommendations."],
+cyber:["Enter or choose your security input.","Run the analysis.","Review the findings and verify important results."]
 };
 
 const usesBy:Record<CategoryId,string[]>={
@@ -70,7 +72,8 @@ calc:["Planning","Budgeting","Everyday math"],
 convert:["Travel","Work and study","Everyday measurements"],
 text:["Development","Data cleanup","Writing and editing"],
 utility:["Sharing","Security hygiene","Scans and screenshots"],
-career:["Job applications","Resume tailoring","Career preparation"]
+career:["Job applications","Resume tailoring","Career preparation"],
+cyber:["Security testing","Incident analysis","Developer security"]
 };
 
 export const tools:Tool[]=rows.map(([slug,name,short,category,kind])=>({
@@ -86,7 +89,8 @@ export const categories=[
 {id:"convert" as const,name:"Converters",description:"Units, temperatures, sizes and time zones."},
 {id:"text" as const,name:"Text & developer",description:"JSON, comparison, counting and cleanup."},
 {id:"utility" as const,name:"Utilities",description:"QR codes, passwords and OCR."},
-{id:"career" as const,name:"Career tools",description:"Resume analysis and job-application helpers."}
+{id:"career" as const,name:"Career tools",description:"Resume analysis and job-application helpers."},
+{id:"cyber" as const,name:"Cybersecurity tools",description:"Web security, cryptography, DNS, forensics and defensive analysis."}
 ];
 
 export function getTool(slug:string){return tools.find(t=>t.slug===slug);}
