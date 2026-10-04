@@ -17,10 +17,15 @@ export async function runPdf(slug:string,files:File[],page:string){
   return{blob:pdfBlob(await out.save()),name:"extracted-page.pdf",message:"Exported page "+(i+1)+"."};
  }
  if(slug==="screenshot-to-pdf"){
-  const f=files[0],im=await readImage(f),out=await PDFDocument.create();
-  const emb=f.type==="image/png"?await out.embedPng(await f.arrayBuffer()):await out.embedJpg(await f.arrayBuffer());
-  const p=out.addPage([im.naturalWidth,im.naturalHeight]);p.drawImage(emb,{x:0,y:0,width:im.naturalWidth,height:im.naturalHeight});
-  return{blob:pdfBlob(await out.save()),name:"screenshot.pdf",message:"Created PDF from screenshot."};
+  const out=await PDFDocument.create();
+  for(const f of files){
+    if(f.type!=="image/png"&&f.type!=="image/jpeg")throw Error("Only PNG and JPG images are supported.");
+    const im=await readImage(f);
+    const emb=f.type==="image/png"?await out.embedPng(await f.arrayBuffer()):await out.embedJpg(await f.arrayBuffer());
+    const p=out.addPage([im.naturalWidth,im.naturalHeight]);
+    p.drawImage(emb,{x:0,y:0,width:im.naturalWidth,height:im.naturalHeight});
+  }
+  return{blob:pdfBlob(await out.save()),name:"screenshots.pdf",message:"Created PDF with "+files.length+" image page"+(files.length===1?"":"s")+"."};
  }
  const pdfjs=await import("pdfjs-dist/legacy/build/pdf.mjs"),data=await files[0].arrayBuffer();
  const doc=await pdfjs.getDocument({data}).promise,texts:string[]=[];
