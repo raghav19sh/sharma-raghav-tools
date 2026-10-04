@@ -86,7 +86,15 @@ export default function ToolRunner({tool}:{tool:Tool}){
  };
  return <div className="card runner">
   <div className="runnerhead"><div><h2>Use {tool.name}</h2><div className="sub">No account required. Browser-first where practical.</div></div><span className="pill">{tool.category.toUpperCase()}</span></div>
-  {(needFile||needPdf)&&<div className="upload"><label htmlFor="tool-input" className="btn">{tool.slug==="word-to-pdf"?"Choose Word file(s)":needPdf?"Choose PDF file(s)":"Choose image file(s)"}</label><input id="tool-input" type="file" accept={tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const x=Array.from(e.target.files||[]);setFile(x[0]||null);setFiles(x)}}/><div className="meta">{files.length?(files.length+" file"+(files.length===1?"":"s")+" selected: "+files.map(x=>x.name).join(" • ")):file?.name||"Select one or more files"}</div></div>}{batchable&&<div className="sub">Select multiple files to process them in one run.</div>}
+  {(needFile||needPdf)&&<div className="upload">
+   <input id="tool-input" type="file" accept={tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(!incoming.length)return;setFiles(prev=>{const seen=new Set(prev.map(x=>x.name+"|"+x.size+"|"+x.lastModified));const next=[...prev,...incoming.filter(x=>!seen.has(x.name+"|"+x.size+"|"+x.lastModified))];setFile(next[0]||null);return next});e.currentTarget.value=""}}/>
+   <div className="runactions" style={{justifyContent:"center"}}>
+    <button type="button" className="btn" onClick={()=>document.getElementById("tool-input")?.click()}>{files.length?"Add more files":"Choose file(s)"}</button>
+    {files.length>0&&<button type="button" className="btn" onClick={()=>{setFiles([]);setFile(null)}}>Clear selection</button>}
+   </div>
+   <div className="meta">{files.length?(files.length+" file"+(files.length===1?"":"s")+" selected: "+files.map(x=>x.name).join(" • ")):file?.name||"Select one or more files"}</div>
+   {batchable&&<div className="sub">On phones, use “Add more files” to add another batch when the file picker only lets you choose one at a time.</div>}
+  </div>}
   {tool.slug==="compress-image"&&<div className="form">{field("Target size (KB)",b,setB,"number","100")}<div className="presets"><button type="button" className="btn" onClick={()=>setB("100")}>100 KB</button><button type="button" className="btn" onClick={()=>setB("500")}>500 KB</button><button type="button" className="btn" onClick={()=>setB("1000")}>1 MB</button></div></div>}
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
