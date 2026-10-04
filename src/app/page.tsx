@@ -4,10 +4,10 @@ import {categories,tools} from "@/lib/tools";
 import {guides} from "@/lib/guides";
 import AdSlot from "@/components/AdSlot";
 
-const Icon=({id}:{id:string})=>id==="image"?<FileImage size={19}/>:id==="pdf"?<FileText size={19}/>:id==="calc"?<Calculator size={19}/>:id==="convert"?<RefreshCw size={19}/>:id==="text"?<Braces size={19}/>:<Sparkles size={19}/>;
+const Icon=({id}:{id:string})=>id==="image"?<FileImage size={19}/>:id==="pdf"?<FileText size={19}/>:id==="calc"?<Calculator size={19}/>:id==="convert"?<RefreshCw size={19}/>:id==="text"?<Braces size={19}/>:id==="cyber"?<ShieldCheck size={19}/>:<Sparkles size={19}/>;
 
 export default function Home(){
- const popular=["compress-image","video-to-audio","merge-pdf","pdf-to-word","pdf-to-docs","word-to-pdf","edit-pdf","scan-pdf","scan-image","ats-resume-score","emi-calculator","json-formatter","qr-generator","password-generator","extract-text-image"].map(s=>tools.find(t=>t.slug===s)!).filter(Boolean);
+ const popular=["compress-image","video-to-audio","merge-pdf","pdf-to-word","pdf-to-docs","word-to-pdf","edit-pdf","scan-pdf","scan-image","ats-resume-score","emi-calculator","json-formatter","qr-generator","password-generator","extract-text-image","http-security-header-analyzer","jwt-analyzer","dns-record-analyzer","ip-cidr-calculator","file-hash-calculator"].map(s=>tools.find(t=>t.slug===s)!).filter(Boolean);
  return <div className="site">
   <header className="topbar"><div className="container nav"><Link className="brand" href="/"><span className="mark">SR</span><span>Sharma-Raghav Tools</span></Link><nav className="navlinks"><Link href="#tools">All tools</Link><Link href="/guides">Guides</Link><Link href="/privacy">Privacy</Link><Link href="/contact">Contact</Link></nav></div></header>
   <main>
