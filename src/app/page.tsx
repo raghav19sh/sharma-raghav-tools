@@ -4,6 +4,14 @@ import {categories,tools} from "@/lib/tools";
 import {guides} from "@/lib/guides";
 import AdSlot from "@/components/AdSlot";
 
+
+const cyberGroups:Record<string,string[]>={
+"Security & threat analysis":["security-report-generator","universal-security-analyzer","http-security-header-analyzer","jwt-analyzer","url-domain-analyzer","password-strength-analyzer","regex-security-tester","csp-generator","security-txt-generator","qr-security-analyzer","ioc-analyzer","ioc-extractor","stix-ioc-exporter","yara-rule-tester","log-analyzer","pcap-analyzer","file-forensics"],
+"Network & infrastructure":["ip-cidr-calculator","dns-record-analyzer","tls-ssl-analyzer","whois-rdap-lookup","port-range-calculator"],
+"Cryptography & data":["hash-generator","hash-identifier","file-hash-calculator","base64-url-hex","entropy-calculator"],
+"Developer utilities":["json-to-typescript","json-to-csv","unix-timestamp-converter","chmod-calculator","cron-expression-helper","http-status-lookup","mime-type-lookup","user-agent-parser","html-entity-encoder","sql-formatter","markdown-to-html"],
+"Security scoring":["cvss-calculator"]
+};
 const Icon=({id}:{id:string})=>id==="image"?<FileImage size={19}/>:id==="pdf"?<FileText size={19}/>:id==="calc"?<Calculator size={19}/>:id==="convert"?<RefreshCw size={19}/>:id==="text"?<Braces size={19}/>:id==="cyber"?<ShieldCheck size={19}/>:<Sparkles size={19}/>;
 
 export default function Home(){
@@ -19,7 +27,7 @@ export default function Home(){
    <section className="section container"><div className="sectionhead"><div><h2>Guides</h2><p>Practical answers for common image, PDF and resume tasks.</p></div></div><div className="grid3">
     {guides.map(g=><Link className="card cat" href={"/guides/"+g.slug} key={g.slug}><span className="eyebrow">Guide</span><h3>{g.title}</h3><p>{g.description}</p><span className="count">Read guide →</span></Link>)}
    </div></section>
-   {categories.map(c=><section className="section container" id={c.id} key={c.id}><div className="sectionhead"><div><h2>{c.name}</h2><p>{c.description}</p></div></div><div className="list">{tools.filter(t=>t.category===c.id).map(t=><Link className="card tool" href={"/"+t.slug} key={t.slug}><div className="toolmain"><span className="toolicon"><Icon id={c.id}/></span><div><h3>{t.name}</h3><p>{t.short}</p></div></div><ArrowRight className="arrow" size={17}/></Link>)}</div></section>)}
+   {categories.map(c=><section className="section container" id={c.id} key={c.id}><div className="sectionhead"><div><h2>{c.name}</h2><p>{c.description}</p></div></div>{c.id==="cyber"?Object.entries(cyberGroups).map(([group,slugs])=><div key={group} style={{marginBottom:"2.5rem"}}><h3 style={{marginBottom:"1rem"}}>{group}</h3><div className="list">{slugs.map(slug=>tools.find(t=>t.slug===slug)).filter(Boolean).map(t=><Link className="card tool" href={"/"+t!.slug} key={t!.slug}><div className="toolmain"><span className="toolicon"><Icon id={c.id}/></span><div><h3>{t!.name}</h3><p>{t!.short}</p></div></div><ArrowRight className="arrow" size={17}/></Link>)}</div></div>):<div className="list">{tools.filter(t=>t.category===c.id).map(t=><Link className="card tool" href={"/"+t.slug} key={t.slug}><div className="toolmain"><span className="toolicon"><Icon id={c.id}/></span><div><h3>{t.name}</h3><p>{t.short}</p></div></div><ArrowRight className="arrow" size={17}/></Link>)}</div>}</section>)}
   </main>
   <footer className="footer"><div className="container foot"><span>© {new Date().getFullYear()} Sharma-Raghav Tools</span><div className="footlinks"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/contact">Contact</Link></div></div></footer>
  </div>
