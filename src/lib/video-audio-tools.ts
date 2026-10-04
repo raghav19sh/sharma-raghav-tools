@@ -1,8 +1,8 @@
-import type {FFmpeg} from "@ffmpeg/ffmpeg";
+type FFmpegLike={writeFile:(name:string,data:Uint8Array)=>Promise<unknown>;exec:(args:string[])=>Promise<number>;readFile:(name:string)=>Promise<Uint8Array|string>;deleteFile:(name:string)=>Promise<unknown>;load:(config:{coreURL:string;wasmURL:string;workerURL:string})=>Promise<unknown>;on:(event:"progress",callback:(data:{progress:number})=>void)=>void};
 
 export type AudioFormat="mp3"|"wav"|"m4a"|"aac"|"flac"|"ogg"|"opus";
 
-let ffmpeg:FFmpeg|null=null;
+let ffmpeg:FFmpegLike|null=null;
 let loading:Promise<void>|null=null;
 let progressHandler:((progress:number)=>void)|null=null;
 
@@ -61,8 +61,9 @@ export async function convertVideoToAudio(file:File,format:AudioFormat,onProgres
   if(ret!==0)throw Error("FFmpeg could not extract an audio stream from this video.");
   const data=await engine.readFile(output);
   if(typeof data==="string")throw Error("The converter returned an invalid audio result.");
+  const safeBuffer=data.slice().buffer as ArrayBuffer;
   return {
-   blob:new Blob([data],{type:settings[format].mime}),
+   blob:new Blob([safeBuffer],{type:settings[format].mime}),
    name:file.name.replace(/\.[^/.]+$/,"")+"."+format
   };
  }finally{
