@@ -5,6 +5,7 @@ import {calculate,convert} from "@/lib/calculators";
 import {runText} from "@/lib/text-tools";
 import {runImage,saveBlob} from "@/lib/image-tools";
 import {runPdf} from "@/lib/pdf-tools";
+import {scoreResume} from "@/lib/resume-tools";
 import {zoned,qrCode,strongPassword,ocr} from "@/lib/utility-tools";
 
 const stem=(name:string)=>name.replace(/\.[^/.]+$/,"");
@@ -20,12 +21,20 @@ export default function ToolRunner({tool}:{tool:Tool}){
  const [dt,setDt]=useState("2026-10-04T18:00"),[len,setLen]=useState("20"),[symbols,setSymbols]=useState(true);
  const [status,setStatus]=useState(""),[error,setError]=useState(""),[result,setResult]=useState(""),[short,setShort]=useState(""),[qr,setQr]=useState("");
  const field=(label:string,value:string,set:(v:string)=>void,type="text",placeholder="")=><div className="field"><label>{label}</label><input type={type} value={value} onChange={e=>set(e.target.value)} placeholder={placeholder}/></div>;
- const needFile=tool.kind==="image"||tool.kind==="ocr",needPdf=tool.kind==="pdf";
+ const needFile=tool.kind==="image"||tool.kind==="ocr",needPdf=tool.kind==="pdf",needResume=tool.kind==="resume";
  const batchable=needFile||needPdf;
  const run=async()=>{
   setStatus("Working…");setError("");setResult("");setShort("");setQr("");
   try{
-   if(tool.kind==="ocr"){
+   if(tool.kind==="resume"){
+    const resume=file||files[0];
+    if(!resume)throw Error("Choose a PDF or DOCX resume first.");
+    setStatus("Analyzing resume…");
+    const x=await scoreResume(resume,a);
+    saveText(x.report,stem(resume.name)+"-ats-report.txt");
+    setResult(x.report);
+  }
+   else if(tool.kind==="ocr"){
    const selected=files.length?files:(file?[file]:[]);
    if(!selected.length)throw Error("Choose at least one image first.");
    const outputs:string[]=[];
@@ -87,10 +96,10 @@ export default function ToolRunner({tool}:{tool:Tool}){
  };
  return <div className="card runner">
   <div className="runnerhead"><div><h2>Use {tool.name}</h2><div className="sub">No account required. Browser-first where practical.</div></div><span className="pill">{tool.category.toUpperCase()}</span></div>
-  {(needFile||needPdf)&&<div className="upload">
-   <input id="tool-input" type="file" accept={tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(!incoming.length)return;setFiles(prev=>{const seen=new Set(prev.map(x=>x.name+"|"+x.size+"|"+x.lastModified));const next=[...prev,...incoming.filter(x=>!seen.has(x.name+"|"+x.size+"|"+x.lastModified))];setFile(next[0]||null);return next});e.currentTarget.value=""}}/>
+  {(needFile||needPdf||needResume)&&<div className="upload">
+   <input id="tool-input" type="file" accept={needResume?".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="word-to-pdf"?".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document":tool.slug==="heic-to-jpg"?".heic,.heif":tool.slug==="screenshot-to-pdf"||tool.slug==="images-to-pdf"?"image/png,image/jpeg,image/webp":needPdf?".pdf":"image/*"} multiple={batchable} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(!incoming.length)return;setFiles(prev=>{const seen=new Set(prev.map(x=>x.name+"|"+x.size+"|"+x.lastModified));const next=[...prev,...incoming.filter(x=>!seen.has(x.name+"|"+x.size+"|"+x.lastModified))];setFile(next[0]||null);return next});e.currentTarget.value=""}}/>
    <div className="runactions" style={{justifyContent:"center"}}>
-    <button type="button" className="btn" onClick={()=>document.getElementById("tool-input")?.click()}>{files.length?"Add more files":"Choose file(s)"}</button>
+    <button type="button" className="btn" onClick={()=>document.getElementById("tool-input")?.click()}>{files.length?"Add more files":needResume?"Choose resume":"Choose file(s)"}</button>
     {files.length>0&&<button type="button" className="btn" onClick={()=>{setFiles([]);setFile(null)}}>Clear selection</button>}
    </div>
    <div className="meta">{files.length?(files.length+" file"+(files.length===1?"":"s")+" selected: "+files.map(x=>x.name).join(" • ")):file?.name||"Select one or more files"}</div>
@@ -100,6 +109,7 @@ export default function ToolRunner({tool}:{tool:Tool}){
   {tool.slug==="resize-image"&&<div className="form">{field("Width (px)",b,setB,"number","800")}{field("Height (px)",c,setC,"number","800")}</div>}
   {tool.slug==="photo-smaller"&&<div className="form">{field("Maximum dimension (px)",b,setB,"number","1200")}</div>}
   {tool.slug==="signature-image"&&<div className="form">{field("Cleanup threshold",c,setC,"number","235")}</div>}
+  {tool.slug==="ats-resume-score"&&<div className="form"><div className="field full"><label>Target job description (optional)</label><textarea value={a} onChange={e=>setA(e.target.value)} placeholder="Paste the job description here to measure keyword alignment…"/></div></div>}
   {tool.slug==="scan-image"&&<div className="form"><div className="field"><label>Scan mode</label><select value={scanMode} onChange={e=>setScanMode(e.target.value)}><option value="bw">Black & white</option><option value="grayscale">Grayscale</option></select></div></div>}
   {tool.slug==="extract-pdf-page"&&<div className="form">{field("Page number",page,setPage,"number","1")}</div>}
   {tool.slug==="scan-pdf"&&<div className="form"><div className="field"><label>Scan mode</label><select value={scanMode} onChange={e=>setScanMode(e.target.value)}><option value="bw">Black & white</option><option value="grayscale">Grayscale</option></select></div></div>}
