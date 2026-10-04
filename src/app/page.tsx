@@ -6,7 +6,7 @@ import AdSlot from "@/components/AdSlot";
 
 
 const cyberGroups:Record<string,string[]>={
-"Security & threat analysis":["security-report-generator","universal-security-analyzer","http-security-header-analyzer","jwt-analyzer","url-domain-analyzer","password-strength-analyzer","regex-security-tester","csp-generator","security-txt-generator","qr-security-analyzer","ioc-analyzer","ioc-extractor","stix-ioc-exporter","yara-rule-tester","log-analyzer","pcap-analyzer","file-forensics"],
+"Security & threat analysis":["security-report-generator","universal-security-analyzer","http-security-header-analyzer","jwt-analyzer","url-domain-analyzer","password-strength-analyzer","regex-security-tester","csp-generator","security-txt-generator","qr-security-analyzer","ioc-analyzer","ioc-extractor","stix-ioc-exporter","yara-rule-tester","log-analyzer","pcap-analyzer","file-forensics","exif-metadata-viewer"],
 "Network & infrastructure":["ip-cidr-calculator","dns-record-analyzer","tls-ssl-analyzer","whois-rdap-lookup","port-range-calculator"],
 "Cryptography & data":["hash-generator","hash-identifier","file-hash-calculator","base64-url-hex","entropy-calculator"],
 "Developer utilities":["json-to-typescript","json-to-csv","unix-timestamp-converter","chmod-calculator","cron-expression-helper","http-status-lookup","mime-type-lookup","user-agent-parser","html-entity-encoder","sql-formatter","markdown-to-html"],
