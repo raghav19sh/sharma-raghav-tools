@@ -12,7 +12,7 @@ export async function generateMetadata({params}:{params:Promise<{slug:string}>})
 }
 export default async function ToolPage({params}:{params:Promise<{slug:string}>}){
  const {slug}=await params;const t=getTool(slug);if(!t)notFound();
- const cat=t.category==="image"?"Image tools":t.category==="pdf"?"PDF tools":t.category==="calc"?"Calculators":t.category==="convert"?"Converters":t.category==="text"?"Text & developer":"Utilities";
+ const cat=t.category==="image"?"Image tools":t.category==="pdf"?"PDF tools":t.category==="calc"?"Calculators":t.category==="convert"?"Converters":t.category==="text"?"Text & developer":t.category==="utility"?"Utilities":"Career tools";
  const ld={"@context":"https://schema.org","@type":"WebApplication",name:t.name,description:t.description,applicationCategory:"UtilityApplication",operatingSystem:"Any",url:"https://tools.sharma-raghav.com/"+t.slug};
  return <div className="site"><header className="topbar"><div className="container nav"><Link className="brand" href="/"><span className="mark">SR</span><span>Sharma-Raghav Tools</span></Link><nav className="navlinks"><Link href="/">All tools</Link><Link href="/privacy">Privacy</Link><Link href="/contact">Contact</Link></nav></div></header>
  <main className="container"><section className="toolhero"><div className="crumbs"><Link href="/">Home</Link><span>›</span><span>{cat}</span><span>›</span><span>{t.name}</span></div><h1>{t.name}</h1><p>{t.description}</p></section>
