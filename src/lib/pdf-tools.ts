@@ -47,7 +47,7 @@ async function scanPdfText(data:ArrayBuffer){
  return{doc,texts};
 }
 
-export async function runPdf(slug:string,files:File[],page:string,edit={operation:"text",text:"",x:"50",y:"50",size:"14"}){
+export async function runPdf(slug:string,files:File[],page:string,edit={operation:"text",text:"",x:"50",y:"50",size:"14"},scanMode="bw"){
  if(!files.length)throw Error("Choose a file.");
  const {PDFDocument,StandardFonts,degrees,rgb}=await import("pdf-lib");
 
@@ -88,6 +88,34 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
    name:"scanned-pdf-text.txt",
    message:"OCR scanned "+doc.numPages+" PDF page"+(doc.numPages===1?"":"s")+" and downloaded the extracted text."
   };
+ }
+
+ if(slug==="scan-pdf"){
+  const doc=await loadPdf(await files[0].arrayBuffer());
+  const out=await PDFDocument.create();
+  for(let i=1;i<=doc.numPages;i++){
+   const pg=await doc.getPage(i);
+   const baseViewport=pg.getViewport({scale:1});
+   const renderViewport=pg.getViewport({scale:1.6});
+   const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+   if(!ctx)throw Error("Canvas unavailable.");
+   canvas.width=Math.ceil(renderViewport.width);canvas.height=Math.ceil(renderViewport.height);
+   await pg.render({canvasContext:ctx,canvas,viewport:renderViewport}).promise;
+   const d=ctx.getImageData(0,0,canvas.width,canvas.height);
+   for(let p=0;p<d.data.length;p+=4){
+    const gray=.299*d.data[p]+.587*d.data[p+1]+.114*d.data[p+2];
+    const boosted=Math.max(0,Math.min(255,(gray-128)*1.35+128));
+    const v=scanMode==="grayscale"?boosted:(boosted>178?255:0);
+    d.data[p]=v;d.data[p+1]=v;d.data[p+2]=v;
+   }
+   ctx.putImageData(d,0,0);
+   const jpg=await toBlob(canvas,"image/jpeg",.94);
+   const emb=await out.embedJpg(await jpg.arrayBuffer());
+   const p=out.addPage([baseViewport.width,baseViewport.height]);
+   p.drawImage(emb,{x:0,y:0,width:baseViewport.width,height:baseViewport.height});
+   canvas.width=1;canvas.height=1;
+  }
+  return{blob:pdfBlob(await out.save()),name:"scanned.pdf",message:"Created a "+(scanMode==="grayscale"?"grayscale":"black-and-white")+" image-only scanned PDF with "+doc.numPages+" page"+(doc.numPages===1?"":"s")+"."};
  }
 
  if(slug==="edit-pdf"){
