@@ -22,6 +22,58 @@ async function loadPdf(data:ArrayBuffer){
  }
 }
 
+async function pdfPageToPng(pg:any,scale=2){
+ const viewport=pg.getViewport({scale});
+ const canvas=document.createElement("canvas");
+ const ctx=canvas.getContext("2d");
+ if(!ctx)throw Error("Canvas unavailable.");
+ canvas.width=Math.ceil(viewport.width);
+ canvas.height=Math.ceil(viewport.height);
+ const task=pg.render({canvasContext:ctx,canvas,viewport});
+ await withTimeout(task.promise,30000,"PDF page rendering timed out.");
+ const blob=await toBlob(canvas,"image/png");
+ const data=new Uint8Array(await blob.arrayBuffer());
+ const widthPt=viewport.width/scale;
+ const heightPt=viewport.height/scale;
+ canvas.width=1;canvas.height=1;
+ try{pg.cleanup()}catch{}
+ return{data,widthPt,heightPt};
+}
+
+async function pdfToDocxPages(data:ArrayBuffer){
+ const doc=await loadPdf(data);
+ const{Document,Packer,Paragraph,ImageRun,SectionType}=await import("docx");
+ const sections=[];
+ for(let i=1;i<=doc.numPages;i++){
+  const pg=await withTimeout(doc.getPage(i),20000,"PDF page "+i+" could not be read in time.");
+  const page=await pdfPageToPng(pg,2);
+  const width=Math.max(1,Math.floor((page.widthPt-2)*96/72));
+  const height=Math.max(1,Math.floor((page.heightPt-2)*96/72));
+  sections.push({
+   properties:{
+    type:i===1?undefined:SectionType.NEXT_PAGE,
+    page:{
+     size:{width:Math.round(page.widthPt*20),height:Math.round(page.heightPt*20)},
+     margin:{top:0,right:0,bottom:0,left:0,header:0,footer:0,gutter:0}
+    }
+   },
+   children:[
+    new Paragraph({
+     spacing:{before:0,after:0},
+     children:[new ImageRun({
+      type:"png",
+      data:page.data,
+      transformation:{width,height},
+      altText:{name:"PDF page "+i,title:"PDF page "+i,description:"Rendered page "+i+" from the source PDF"}
+     })]
+    })
+   ]
+  });
+ }
+ const word=new Document({sections});
+ return{doc,pages:doc.numPages,blob:await Packer.toBlob(word)};
+}
+
 async function extractPdfText(data:ArrayBuffer){
  const doc=await loadPdf(data);
  const texts:string[]=[];
@@ -133,14 +185,11 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
  }
 
  if(slug==="pdf-to-word"||slug==="pdf-to-docs"){
-  const {doc,texts}=await extractPdfText(await files[0].arrayBuffer());
-  if(!texts.some(Boolean))throw Error("No selectable text found. Scanned/image-only PDFs need OCR first.");
-  const {Document,Packer,Paragraph,TextRun}=await import("docx");
-  const word=new Document({sections:[{children:texts.map(x=>new Paragraph({children:[new TextRun(x||" ")]}))}]});
+  const x=await pdfToDocxPages(await files[0].arrayBuffer());
   return{
-   blob:await Packer.toBlob(word),
+   blob:x.blob,
    name:slug==="pdf-to-docs"?"google-docs-compatible.docx":"converted.docx",
-   message:"Created DOCX from "+doc.numPages+" PDF pages."
+   message:"Created a layout-preserving DOCX with "+x.pages+" page"+(x.pages===1?"":"s")+". Each PDF page is preserved as a full-page image so tables, Hindi text, images and positioning remain intact."
   };
  }
 
