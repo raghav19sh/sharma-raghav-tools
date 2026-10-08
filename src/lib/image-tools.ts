@@ -17,6 +17,8 @@ export async function runImage(slug:string,file:File,target:string,width:string,
  if(!ctx)throw Error("Canvas unavailable.");
  let w=im.naturalWidth,h=im.naturalHeight;
  if(slug==="scan-image"){
+  c.width=w;c.height=h;
+  ctx.drawImage(im,0,0,w,h);
   const d=ctx.getImageData(0,0,w,h);
   const mode=scanMode==="grayscale"?"grayscale":"bw";
   for(let i=0;i<d.data.length;i+=4){
@@ -30,8 +32,18 @@ export async function runImage(slug:string,file:File,target:string,width:string,
  }
  if(slug==="resize-image"){w=Math.max(1,Number(width)||800);h=Math.max(1,Number(height)||800)}
  if(slug==="photo-smaller"){const m=Math.max(200,Number(width)||1200),s=Math.min(1,m/Math.max(w,h));w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s))}
- if(slug==="passport-photo"){w=413;h=531}
- c.width=w;c.height=h;ctx.fillStyle="#fff";if(slug==="passport-photo")ctx.fillRect(0,0,w,h);ctx.drawImage(im,0,0,w,h);
+ if(slug==="passport-photo"){
+  const targetRatio=35/45;
+  const sourceRatio=w/h;
+  let sx=0,sy=0,sw=w,sh=h;
+  if(sourceRatio>targetRatio){sw=Math.round(h*targetRatio);sx=Math.round((w-sw)/2)}
+  else{sh=Math.round(w/targetRatio);sy=Math.round((h-sh)/2)}
+  w=413;h=531;c.width=w;c.height=h;ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  ctx.drawImage(im,sx,sy,sw,sh,0,0,w,h);
+ }else{
+  c.width=w;c.height=h;
+  ctx.drawImage(im,0,0,w,h);
+ }
  if(slug==="remove-background"){const d=ctx.getImageData(0,0,w,h),sample=[0,0,0];for(const p of [0,w-1,(h-1)*w,h*w-1]){sample[0]+=d.data[p*4];sample[1]+=d.data[p*4+1];sample[2]+=d.data[p*4+2]}sample[0]/=4;sample[1]/=4;sample[2]/=4;const t=Math.max(10,Number(threshold)||55);for(let i=0;i<d.data.length;i+=4){const dist=Math.hypot(d.data[i]-sample[0],d.data[i+1]-sample[1],d.data[i+2]-sample[2]);d.data[i+3]=dist<t?0:Math.min(255,Math.max(0,(dist-t)*12))}ctx.putImageData(d,0,0);return{blob:await toBlob(c,"image/png"),name:"background-removed.png",message:"Downloaded transparent PNG. Best results are from images with a fairly plain background."}}
  if(slug==="signature-image"){const d=ctx.getImageData(0,0,w,h),t=Math.max(180,Math.min(255,Number(threshold)||235));for(let i=0;i<d.data.length;i+=4){const l=.299*d.data[i]+.587*d.data[i+1]+.114*d.data[i+2];d.data[i]=0;d.data[i+1]=0;d.data[i+2]=0;d.data[i+3]=l<t?Math.min(255,Math.max(0,(t-l)*8)):0}ctx.putImageData(d,0,0);return{blob:await toBlob(c,"image/png"),name:"signature.png",message:"Downloaded cleaned signature PNG."}}
  if(slug==="compress-image"){
