@@ -224,7 +224,7 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
   document.body.appendChild(container);
   try{
    await withTimeout(
-    renderAsync(await files[0].arrayBuffer(),container,null,{
+    renderAsync(await files[0].arrayBuffer(),container,undefined,{
      className:"docx",
      inWrapper:true,
      breakPages:true,
