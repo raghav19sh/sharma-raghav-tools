@@ -194,33 +194,55 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
  }
 
  if(slug==="word-to-pdf"){
-  const mammoth=(await import("mammoth")).default;
-  const raw=await mammoth.extractRawText({arrayBuffer:await files[0].arrayBuffer()});
-  const out=await PDFDocument.create();
-  const font=await out.embedFont(StandardFonts.Helvetica);
-  const size=11,margin=50,lineHeight=15,maxWidth=495;
-  const wrap=(line:string)=>{
-   const words=line.split(/\s+/).filter(Boolean);
-   if(!words.length)return[""];
-   const rows:string[]=[];
-   let cur="";
-   for(const word of words){
-    const next=cur?cur+" "+word:word;
-    if(font.widthOfTextAtSize(next,size)<=maxWidth)cur=next;
-    else{if(cur)rows.push(cur);cur=word;}
-   }
-   if(cur)rows.push(cur);
-   return rows;
-  };
-  let p=out.addPage(),y=p.getHeight()-margin;
-  for(const rawLine of raw.value.split(/\r?\n/)){
-   for(const line of wrap(rawLine)){
-    if(y<margin){p=out.addPage();y=p.getHeight()-margin;}
-    p.drawText(line,{x:margin,y,size,font,color:rgb(0,0,0)});
-    y-=lineHeight;
-   }
+  const{renderAsync}=await import("docx-preview");
+  const html2PDF=(await import("jspdf-html2canvas")).default;
+  const container=document.createElement("div");
+  container.style.position="fixed";
+  container.style.left="-100000px";
+  container.style.top="0";
+  container.style.visibility="visible";
+  container.style.background="#fff";
+  container.style.zIndex="-1";
+  document.body.appendChild(container);
+  try{
+   await withTimeout(
+    renderAsync(await files[0].arrayBuffer(),container,null,{
+     className:"docx",
+     inWrapper:true,
+     breakPages:true,
+     ignoreLastRenderedPageBreak:false,
+     useBase64URL:true
+    }),
+    60000,
+    "The Word document could not be rendered within 60 seconds."
+   );
+   if("fonts" in document)await document.fonts.ready;
+   await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+   const pages=Array.from(container.querySelectorAll(".docx-wrapper > section.docx, section.docx"));
+   if(!pages.length)throw Error("Could not render the Word document.");
+   const first=pages[0] as HTMLElement;
+   const rect=first.getBoundingClientRect();
+   const widthPt=Math.max(1,rect.width*72/96);
+   const heightPt=Math.max(1,rect.height*72/96);
+   const pdf=await html2PDF(pages,{
+    jsPDF:{unit:"pt",format:[widthPt,heightPt]},
+    html2canvas:{scale:2,useCORS:true,backgroundColor:"#fff",imageTimeout:15000,logging:false},
+    imageType:"image/png",
+    imageQuality:1,
+    margin:{top:0,right:0,bottom:0,left:0},
+    autoResize:false,
+    output:"converted.pdf",
+    success:()=>{}
+   });
+   const arrayBuffer=pdf.output("arraybuffer");
+   return{
+    blob:new Blob([arrayBuffer],{type:"application/pdf"}),
+    name:"converted.pdf",
+    message:"Created a layout-preserving PDF from the Word document ("+pages.length+" page"+(pages.length===1?"":"s")+")."
+   };
+  }finally{
+   container.remove();
   }
-  return{blob:pdfBlob(await out.save()),name:"converted.pdf",message:"Created a text-based PDF from the Word document."};
  }
 
  const source=await PDFDocument.load(await files[0].arrayBuffer());
