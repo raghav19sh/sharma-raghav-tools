@@ -3,46 +3,32 @@ import {readImage,toBlob} from "./image-tools";
 const pdfBlob=(x:Uint8Array)=>new Blob([x as unknown as BlobPart],{type:"application/pdf"});
 const textBlob=(x:string)=>new Blob([x],{type:"text/plain;charset=utf-8"});
 
+const withTimeout=<T>(promise:Promise<T>,ms:number,message:string)=>new Promise<T>((resolve,reject)=>{
+ let timer=window.setTimeout(()=>reject(Error(message)),ms);
+ promise.then(value=>{window.clearTimeout(timer);resolve(value)},error=>{window.clearTimeout(timer);reject(error)});
+});
+
 async function loadPdf(data:ArrayBuffer){
  const pdfjs=await import("pdfjs-dist/legacy/build/pdf.mjs");
  if(typeof window!=="undefined"){
   pdfjs.GlobalWorkerOptions.workerSrc=new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs",import.meta.url).toString();
  }
- return await pdfjs.getDocument({data}).promise;
+ const task=pdfjs.getDocument({data});
+ try{
+  return await withTimeout(task.promise,30000,"The PDF could not be opened within 30 seconds. Try a smaller or non-corrupted PDF.");
+ }catch(error){
+  try{await task.destroy()}catch{}
+  throw error;
+ }
 }
 
 async function extractPdfText(data:ArrayBuffer){
  const doc=await loadPdf(data);
  const texts:string[]=[];
  for(let i=1;i<=doc.numPages;i++){
-  const pg=await doc.getPage(i),ct=await pg.getTextContent();
+  const pg=await withTimeout(doc.getPage(i),20000,"PDF page "+i+" could not be read in time.");
+  const ct=await withTimeout(pg.getTextContent(),20000,"PDF text extraction timed out on page "+i+".");
   texts.push(ct.items.map(x=>"str" in x?x.str:"").join(" ").trim());
- }
- return{doc,texts};
-}
-
-async function scanPdfText(data:ArrayBuffer){
- const doc=await loadPdf(data);
- const {createWorker}=await import("tesseract.js");
- const worker=await createWorker("eng");
- const texts:string[]=[];
- try{
-  for(let i=1;i<=doc.numPages;i++){
-   const pg=await doc.getPage(i);
-   const viewport=pg.getViewport({scale:1.5});
-   const canvas=document.createElement("canvas");
-   const ctx=canvas.getContext("2d");
-   if(!ctx)throw Error("Canvas unavailable.");
-   canvas.width=Math.ceil(viewport.width);
-   canvas.height=Math.ceil(viewport.height);
-   await pg.render({canvasContext:ctx,canvas,viewport}).promise;
-   const result=await worker.recognize(canvas);
-   texts.push(result.data.text.trim());
-   canvas.width=1;
-   canvas.height=1;
-  }
- }finally{
-  await worker.terminate();
  }
  return{doc,texts};
 }
@@ -78,16 +64,6 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
    p.drawImage(emb,{x:0,y:0,width:im.naturalWidth,height:im.naturalHeight});
   }
   return{blob:pdfBlob(await out.save()),name:"images.pdf",message:"Created PDF with "+files.length+" image page"+(files.length===1?"":"s")+" in the selected sequence."};
- }
-
- if(slug==="scan-pdf"){
-  const {doc,texts}=await scanPdfText(await files[0].arrayBuffer());
-  const body=texts.map((value,index)=>"PAGE "+(index+1)+"\n"+(value||"No readable text detected.")).join("\n\n");
-  return{
-   blob:textBlob(body),
-   name:"scanned-pdf-text.txt",
-   message:"OCR scanned "+doc.numPages+" PDF page"+(doc.numPages===1?"":"s")+" and downloaded the extracted text."
-  };
  }
 
  if(slug==="scan-pdf"){
