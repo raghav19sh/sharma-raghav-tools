@@ -20,7 +20,9 @@
     "react-dom": "^19.1.1",
     "tesseract.js": "^7.0.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
-    "@ffmpeg/util": "^0.12.2"
+    "@ffmpeg/util": "^0.12.2",
+    "docx-preview": "^0.4.1",
+    "jspdf-html2canvas": "^1.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",
