@@ -236,7 +236,7 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
    );
    if("fonts" in document)await document.fonts.ready;
    await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-   const pages=Array.from(container.querySelectorAll(".docx-wrapper > section.docx, section.docx"));
+   const pages=Array.from(container.querySelectorAll<HTMLElement>(".docx-wrapper > section.docx, section.docx"));
    if(!pages.length)throw Error("Could not render the Word document.");
    const first=pages[0] as HTMLElement;
    const rect=first.getBoundingClientRect();
