@@ -22,6 +22,24 @@ async function loadPdf(data:ArrayBuffer){
  }
 }
 
+async function isPdfPageBlank(pg:any){
+ const viewport=pg.getViewport({scale:.35});
+ const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+ if(!ctx)throw Error("Canvas unavailable.");
+ canvas.width=Math.max(1,Math.ceil(viewport.width));
+ canvas.height=Math.max(1,Math.ceil(viewport.height));
+ const task=pg.render({canvasContext:ctx,canvas,viewport});
+ await withTimeout(task.promise,30000,"Blank-page detection timed out.");
+ const d=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+ let nonWhite=0;
+ for(let i=0;i<d.length;i+=4){
+  if(d[i]<245||d[i+1]<245||d[i+2]<245){nonWhite++;if(nonWhite>20)break;}
+ }
+ canvas.width=1;canvas.height=1;
+ try{pg.cleanup()}catch{}
+ return nonWhite<=20;
+}
+
 async function pdfPageToPng(pg:any,scale=2){
  const viewport=pg.getViewport({scale});
  const canvas=document.createElement("canvas");
@@ -256,12 +274,16 @@ export async function runPdf(slug:string,files:File[],page:string,edit={operatio
  }
 
  if(slug==="remove-blank-pages-pdf"){
-  const {doc,texts}=await extractPdfText(await files[0].arrayBuffer());
-  const keep=texts.map((x,i)=>x?i:-1).filter(i=>i>=0);
-  if(!keep.length)throw Error("No selectable-text pages found. Image-only scans need OCR.");
+  const doc=await loadPdf(await files[0].arrayBuffer());
+  const keep:number[]=[];
+  for(let i=1;i<=doc.numPages;i++){
+   const pg=await withTimeout(doc.getPage(i),20000,"PDF page "+i+" could not be read in time.");
+   if(!(await isPdfPageBlank(pg)))keep.push(i-1);
+  }
+  if(!keep.length)throw Error("Every page appears blank.");
   const out=await PDFDocument.create();
   (await out.copyPages(source,keep)).forEach(p=>out.addPage(p));
-  return{blob:pdfBlob(await out.save()),name:"without-blank-pages.pdf",message:"Kept "+keep.length+" of "+doc.numPages+" pages."};
+  return{blob:pdfBlob(await out.save()),name:"without-blank-pages.pdf",message:"Removed "+(doc.numPages-keep.length)+" blank page"+(doc.numPages-keep.length===1?"":"s")+" and kept "+keep.length+" of "+doc.numPages+" pages."};
  }
 
  throw Error("Unsupported PDF tool.");
